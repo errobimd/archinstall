@@ -2,75 +2,86 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Callable, Optional
 
 import archinstall
-from archinstall import Installer
-from archinstall import profile
-from archinstall import SysInfo
-from archinstall import disk
-from archinstall import menu
-from archinstall import models
-from archinstall import locale
-from archinstall import info, debug
+from archinstall import Installer, profile, SysInfo, disk, menu, models, locale, info, debug
 
 if TYPE_CHECKING:
 	_: Callable[[str], str]
 
 
 def ask_user_questions() -> None:
+	"""
+	Función para solicitar al usuario que responda varias preguntas sobre la configuración del sistema.
+	"""
 	global_menu = archinstall.GlobalMenu(data_store=archinstall.arguments)
 
+	# Habilitar la selección del idioma de Archinstall
 	global_menu.enable('archinstall-language')
 
-	# Set which region to download packages from during the installation
+	# Configurar la región para descargar paquetes durante la instalación
 	global_menu.enable('mirror_config')
 
+	# Configurar la localización
 	global_menu.enable('locale_config')
 
+	# Configurar el disco (obligatorio)
 	global_menu.enable('disk_config', mandatory=True)
 
-	# Specify disk encryption options
+	# Especificar opciones de cifrado de disco
 	global_menu.enable('disk_encryption')
 
-	# Ask which boot-loader to use (will only ask if we're in UEFI mode, otherwise will default to GRUB)
+	# Preguntar qué gestor de arranque usar (solo si estamos en modo UEFI, de lo contrario, se usará GRUB por defecto)
 	global_menu.enable('bootloader')
 
+	# Configurar el intercambio (swap)
 	global_menu.enable('swap')
 
-	# Get the hostname for the machine
+	# Obtener el nombre de host para la máquina
 	global_menu.enable('hostname')
 
-	# Ask for a root password (optional, but triggers requirement for super-user if skipped)
+	# Preguntar por una contraseña de root (opcional, pero requiere un superusuario si se omite)
 	global_menu.enable('!root-password', mandatory=True)
 
+	# Configurar usuarios (obligatorio)
 	global_menu.enable('!users', mandatory=True)
 
-	# Ask for archinstall-specific profiles_bck (such as desktop environments etc)
+	# Preguntar por perfiles específicos de Archinstall (como entornos de escritorio, etc.)
 	global_menu.enable('profile_config')
 
-	# Ask about audio server selection if one is not already set
+	# Preguntar sobre la selección del servidor de audio si no se ha configurado uno
 	global_menu.enable('audio_config')
 
-	# Ask for preferred kernel:
+	# Preguntar por el kernel preferido (obligatorio)
 	global_menu.enable('kernels', mandatory=True)
 
+	# Configurar paquetes adicionales
 	global_menu.enable('packages')
 
 	if archinstall.arguments.get('advanced', False):
-		# Enable parallel downloads
+		# Habilitar descargas paralelas
 		global_menu.enable('parallel downloads')
 
-	# Ask or Call the helper function that asks the user to optionally configure a network.
+	# Preguntar o llamar a la función auxiliar que solicita al usuario que configure una red opcionalmente
 	global_menu.enable('network_config')
 
+	# Configurar la zona horaria
 	global_menu.enable('timezone')
 
+	# Configurar la sincronización de tiempo (NTP)
 	global_menu.enable('ntp')
 
+	# Configurar repositorios adicionales
 	global_menu.enable('additional-repositories')
 
+	# Separador visual en el menú
 	global_menu.enable('__separator__')
 
+	# Guardar configuración
 	global_menu.enable('save_config')
+
+	# Iniciar instalación
 	global_menu.enable('install')
+
+	# Abortar instalación
 	global_menu.enable('abort')
 
 	global_menu.run()
@@ -78,14 +89,13 @@ def ask_user_questions() -> None:
 
 def perform_installation(mountpoint: Path) -> None:
 	"""
-	Performs the installation steps on a block device.
-	Only requirement is that the block devices are
-	formatted and setup prior to entering this function.
+	Realiza los pasos de instalación en un dispositivo de bloque.
+	El único requisito es que los dispositivos de bloque estén formateados y configurados antes de ingresar a esta función.
 	"""
 	info('Starting installation...')
 	disk_config: disk.DiskLayoutConfiguration = archinstall.arguments['disk_config']
 
-	# Retrieve list of additional repositories and set boolean values appropriately
+	# Recuperar la lista de repositorios adicionales y establecer valores booleanos apropiados
 	enable_testing = 'testing' in archinstall.arguments.get('additional-repositories', [])
 	enable_multilib = 'multilib' in archinstall.arguments.get('additional-repositories', [])
 	locale_config: locale.LocaleConfiguration = archinstall.arguments['locale_config']
@@ -97,7 +107,7 @@ def perform_installation(mountpoint: Path) -> None:
 		disk_encryption=disk_encryption,
 		kernels=archinstall.arguments.get('kernels', ['linux'])
 	) as installation:
-		# Mount all the drives to the desired mountpoint
+		# Montar todas las unidades en el punto de montaje deseado
 		if disk_config.config_type != disk.DiskLayoutType.Pre_mount:
 			installation.mount_ordered_layout()
 
@@ -105,7 +115,7 @@ def perform_installation(mountpoint: Path) -> None:
 
 		if disk_config.config_type != disk.DiskLayoutType.Pre_mount:
 			if disk_encryption and disk_encryption.encryption_type != disk.EncryptionType.NoEncryption:
-				# generate encryption key files for the mounted luks devices
+				# Generar archivos de clave de cifrado para los dispositivos luks montados
 				installation.generate_key_files()
 
 		if mirror_config := archinstall.arguments.get('mirror_config', None):
@@ -129,8 +139,8 @@ def perform_installation(mountpoint: Path) -> None:
 
 		installation.add_bootloader(archinstall.arguments["bootloader"])
 
-		# If user selected to copy the current ISO network configuration
-		# Perform a copy of the config
+		# Si el usuario seleccionó copiar la configuración de red actual del ISO
+		# Realizar una copia de la configuración
 		network_config = archinstall.arguments.get('network_config', None)
 
 		if network_config:
@@ -146,7 +156,7 @@ def perform_installation(mountpoint: Path) -> None:
 		if audio_config:
 			audio_config.install_audio_config(installation)
 		else:
-			info("No audio server will be installed")
+			info("No se instalará ningún servidor de audio")
 
 		if archinstall.arguments.get('packages', None) and archinstall.arguments.get('packages', None)[0] != '':
 			installation.add_additional_packages(archinstall.arguments.get('packages', []))
@@ -169,21 +179,21 @@ def perform_installation(mountpoint: Path) -> None:
 		if profile_config := archinstall.arguments.get('profile_config', None):
 			profile_config.profile.post_install(installation)
 
-		# If the user provided a list of services to be enabled, pass the list to the enable_service function.
-		# Note that while it's called enable_service, it can actually take a list of services and iterate it.
+		# Si el usuario proporcionó una lista de servicios para habilitar, pasar la lista a la función enable_service.
+		# Tenga en cuenta que aunque se llama enable_service, en realidad puede tomar una lista de servicios e iterarla.
 		if archinstall.arguments.get('services', None):
 			installation.enable_service(archinstall.arguments.get('services', []))
 
-		# If the user provided custom commands to be run post-installation, execute them now.
+		# Si el usuario proporcionó comandos personalizados para ejecutar después de la instalación, ejecutarlos ahora.
 		if archinstall.arguments.get('custom-commands', None):
 			archinstall.run_custom_user_commands(archinstall.arguments['custom-commands'], installation)
 
 		installation.genfstab()
 
-		info("For post-installation tips, see https://wiki.archlinux.org/index.php/Installation_guide#Post-installation")
+		info("Para consejos post-instalación, vea https://wiki.archlinux.org/index.php/Installation_guide#Post-installation")
 
 		if not archinstall.arguments.get('silent'):
-			prompt = str(_('Would you like to chroot into the newly created installation and perform post-installation configuration?'))
+			prompt = str(_('¿Le gustaría chrootear en la instalación recién creada y realizar la configuración post-instalación?'))
 			choice = menu.Menu(prompt, menu.Menu.yes_no(), default_option=menu.Menu.yes()).run()
 			if choice.value == menu.Menu.yes():
 				try:
@@ -191,7 +201,7 @@ def perform_installation(mountpoint: Path) -> None:
 				except Exception:
 					pass
 
-	debug(f"Disk states after installing: {disk.disk_layouts()}")
+	debug(f"Estados del disco después de la instalación: {disk.disk_layouts()}")
 
 
 ask_user_questions()
