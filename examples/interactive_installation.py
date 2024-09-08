@@ -203,7 +203,7 @@ def perform_installation(mountpoint: Path) -> None:
 
 	debug(f"Estados del disco después de la instalación: {disk.disk_layouts()}")
 
-
+	
 ask_user_questions()
 
 fs_handler = disk.FilesystemHandler(
