@@ -1,25 +1,21 @@
 from pathlib import Path
-
-from archinstall import Installer
-from archinstall import profile
+from archinstall import Installer, profile, disk, models
 from archinstall.default_profiles.minimal import MinimalProfile
-from archinstall import disk
-from archinstall import models
 
-# we're creating a new ext4 filesystem installation
+# Tipo de sistema de archivos a utilizar
 fs_type = disk.FilesystemType('ext4')
 device_path = Path('/dev/sda')
 
-# get the physical disk device
+# Obtener el dispositivo de disco físico
 device = disk.device_handler.get_device(device_path)
 
 if not device:
-	raise ValueError('No device found for given path')
+	raise ValueError('No se encontró el dispositivo para la ruta dada')
 
-# create a new modification for the specific device
+# Crear una nueva modificación para el dispositivo específico
 device_modification = disk.DeviceModification(device, wipe=True)
 
-# create a new boot partition
+# Crear una nueva partición de arranque
 boot_partition = disk.PartitionModification(
 	status=disk.ModificationStatus.Create,
 	type=disk.PartitionType.Primary,
@@ -31,7 +27,7 @@ boot_partition = disk.PartitionModification(
 )
 device_modification.add_partition(boot_partition)
 
-# create a root partition
+# Crear una partición raíz
 root_partition = disk.PartitionModification(
 	status=disk.ModificationStatus.Create,
 	type=disk.PartitionType.Primary,
@@ -43,10 +39,11 @@ root_partition = disk.PartitionModification(
 )
 device_modification.add_partition(root_partition)
 
+# Calcular el inicio y la longitud de la partición home
 start_home = root_partition.length
 length_home = device.device_info.total_size - start_home
 
-# create a new home partition
+# Crear una nueva partición home
 home_partition = disk.PartitionModification(
 	status=disk.ModificationStatus.Create,
 	type=disk.PartitionType.Primary,
@@ -58,12 +55,13 @@ home_partition = disk.PartitionModification(
 )
 device_modification.add_partition(home_partition)
 
+# Configuración de la disposición del disco
 disk_config = disk.DiskLayoutConfiguration(
 	config_type=disk.DiskLayoutType.Default,
 	device_modifications=[device_modification]
 )
 
-# disk encryption configuration (Optional)
+# Configuración de cifrado de disco (Opcional)
 disk_encryption = disk.DiskEncryption(
 	encryption_password="enc_password",
 	encryption_type=disk.EncryptionType.Luks,
@@ -71,15 +69,17 @@ disk_encryption = disk.DiskEncryption(
 	hsm_device=None
 )
 
-# initiate file handler with the disk config and the optional disk encryption config
+# Iniciar el manejador de archivos con la configuración del disco y la configuración opcional de cifrado de disco
 fs_handler = disk.FilesystemHandler(disk_config, disk_encryption)
 
-# perform all file operations
-# WARNING: this will potentially format the filesystem and delete all data
+# Realizar todas las operaciones de archivos
+# ADVERTENCIA: esto potencialmente formateará el sistema de archivos y eliminará todos los datos
 fs_handler.perform_filesystem_operations(show_countdown=False)
 
+# Punto de montaje para la instalación
 mountpoint = Path('/tmp')
 
+# Iniciar la instalación
 with Installer(
 	mountpoint,
 	disk_config,
@@ -90,10 +90,14 @@ with Installer(
 	installation.minimal_installation(hostname='minimal-arch')
 	installation.add_additional_packages(['nano', 'wget', 'git'])
 
-# Optionally, install a profile of choice.
-# In this case, we install a minimal profile that is empty
+# Opcionalmente, instalar un perfil de elección.
+# En este caso, instalamos un perfil mínimo que está vacío
 profile_config = profile.ProfileConfiguration(MinimalProfile())
 profile.profile_handler.install_profile_config(installation, profile_config)
 
+# Crear un usuario
 user = models.User('archinstall', 'password', True)
 installation.create_users(user)
+
+# Log de la instalación para análisis posterior
+print("Instalación completada con éxito.")
