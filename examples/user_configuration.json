@@ -1,0 +1,142 @@
+{
+    "additional-repositories": [
+        "multilib",
+        "testing"
+    ],
+    "archinstall-language": "Spanish",
+    "audio_config": {
+        "audio": "pipewire"
+    },
+    "bootloader": "Grub",
+    "config_version": "2.8.6",
+    "debug": false,
+    "disk_config": {
+        "config_type": "manual_partitioning",
+        "device_modifications": [
+            {
+                "device": "/dev/vda",
+                "partitions": [
+                    {
+                        "btrfs": [],
+                        "dev_path": null,
+                        "flags": [
+                            "Boot"
+                        ],
+                        "fs_type": "fat32",
+                        "mount_options": [],
+                        "mountpoint": "/boot",
+                        "obj_id": "bede877b-6caa-4d19-bde9-ad2e314a4b20",
+                        "size": {
+                            "sector_size": {
+                                "unit": "B",
+                                "value": 512
+                            },
+                            "unit": "GiB",
+                            "value": 1
+                        },
+                        "start": {
+                            "sector_size": {
+                                "unit": "B",
+                                "value": 512
+                            },
+                            "unit": "MiB",
+                            "value": 3
+                        },
+                        "status": "create",
+                        "type": "primary"
+                    },
+                    {
+                        "btrfs": [],
+                        "dev_path": null,
+                        "flags": [],
+                        "fs_type": "ext4",
+                        "mount_options": [],
+                        "mountpoint": "/",
+                        "obj_id": "8912c1a4-7970-4966-b34c-d70d611bf6dd",
+                        "size": {
+                            "sector_size": {
+                                "unit": "B",
+                                "value": 512
+                            },
+                            "unit": "B",
+                            "value": 20397948928
+                        },
+                        "start": {
+                            "sector_size": {
+                                "unit": "B",
+                                "value": 512
+                            },
+                            "unit": "B",
+                            "value": 1076887552
+                        },
+                        "status": "create",
+                        "type": "primary"
+                    }
+                ],
+                "wipe": false
+            }
+        ]
+    },
+    "disk_encryption": null,
+    "hostname": "archlinux_echoai",
+    "kernels": [
+        "linux",
+        "linux-hardened",
+        "linux-lts",
+        "linux-zen"
+    ],
+    "locale_config": {
+        "kb_layout": "es",
+        "sys_enc": "UTF-8",
+        "sys_lang": "es_ES.UTF-8"
+    },
+    "mirror_config": {
+        "custom_mirrors": [],
+        "mirror_regions": {
+            "Spain": [
+                "https://nox.panibrez.com/archlinux/$repo/os/$arch",
+                "http://es.mirrors.cicku.me/archlinux/$repo/os/$arch",
+                "http://mirror.raiolanetworks.com/archlinux/$repo/os/$arch",
+                "https://mirror.raiolanetworks.com/archlinux/$repo/os/$arch",
+                "https://es.mirrors.cicku.me/archlinux/$repo/os/$arch",
+                "http://ftp.rediris.es/mirror/archlinux/$repo/os/$arch",
+                "http://mirrors.marquitos.space/archlinux/$repo/os/$arch",
+                "https://mirrors.marquitos.space/archlinux/$repo/os/$arch"
+            ]
+        }
+    },
+    "network_config": {
+        "type": "nm"
+    },
+    "no_pkg_lookups": false,
+    "ntp": true,
+    "offline": false,
+    "packages": [
+        "vorta",
+        "btop",
+        "nvtop",
+        "fastfetch"
+    ],
+    "parallel downloads": 0,
+    "profile_config": {
+        "gfx_driver": "Nvidia (proprietary)",
+        "greeter": "sddm",
+        "profile": {
+            "custom_settings": {
+                "KDE Plasma": {}
+            },
+            "details": [
+                "KDE Plasma"
+            ],
+            "main": "Desktop"
+        }
+    },
+    "script": "guided",
+    "silent": false,
+    "skip_ntp": false,
+    "skip_version_check": false,
+    "swap": true,
+    "timezone": "Europe/Madrid",
+    "uki": false,
+    "version": "2.8.6"
+}
